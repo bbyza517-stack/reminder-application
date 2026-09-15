@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Görev Panosu</title>
+<style>
+  :root{
+    --bg: #0a0f0c;
+    --panel: #101713;
+    --line: #223229;
+    --text: #e8f5ee;
+    --dim: #77937f;
+    --amber: #ffb020;
+    --red: #ff4d4d;
+    --green: #2ee87e;
+    --info: #4fc3f7;
+    --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  body.light{
+    --bg: #f4f6f4;
+    --panel: #ffffff;
+    --line: #dbe2dd;
+    --text: #142019;
+    --dim: #5c6b62;
+    --amber: #d97706;
+    --red: #e11d48;
+    --green: #0ea968;
+    --info: #0284c7;
+  }
+  body.light{
+    background: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(14,169,104,0.08), transparent 60%), var(--bg);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(46,232,126,0.12), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    padding:32px 20px 80px;
+  }
+  .wrap{ 
+    max-width:1040px; 
+    margin:0 auto;
+  }
+
+  .layout{ 
+    display:grid; 
+    grid-template-columns:minmax(0,1fr) 280px; 
+    gap:24px; 
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns:1fr; }
+    .cal-panel{  
+    position:static; 
+    width:100% ;
+    max-width:360px;
+    justify-self:center;
+    }
+  }
+
+  header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:28px;
+    flex-wrap:wrap; gap:10px;
+  }
+  header .title{ font-size:20px; letter-spacing:0.5px; }
+  header .title span{ color:var(--green); }
+  header .right{ display:flex; align-items:center; gap:14px; }
+  header .clock{ color:var(--dim); font-size:13px; }
+  #temaBtn{ padding:6px 10px; font-size:12px; }
+  #dilSec{
+    font-family:var(--mono);
+    font-size:12px;
+    background:#0d1310;
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:6px 8px;
+    cursor:pointer;
+    outline:none;
+  }
+
+  #dilSec:hover,
+  #dilSec:focus{
+    border-color:var(--green);
+  }
+
+  body.light #dilSec{
+    background:#f4f6f4;
+  }
+
+  .search-row{ margin-bottom:16px; }
+  .search-row input{
+    width:100%; background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    color:var(--text); padding:10px 14px; font-family:var(--mono); font-size:13px; outline:none;
+  }
+  .search-row input:focus{ border-color:var(--green); }
+  .filter-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+
+  .filter-btn{
+    padding:7px 10px;
+    font-size:11.5px;
+  }
+
+  .filter-btn.active{
+    border-color:var(--green);
+    color:var(--green);
+  }
+
+  .summary{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:28px;
+  }
+  .summary .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:14px 16px;
+  }
+  .summary .num{ font-size:26px; font-weight:600; line-height:1; }
+  .summary .label{ color:var(--dim); font-size:12px; margin-top:6px; letter-spacing:0.3px; }
+  .summary .card.overdue .num{ color:var(--red); text-shadow:0 0 14px rgba(255,77,77,0.35); }
+  .summary .card.soon .num{ color:var(--amber); text-shadow:0 0 14px rgba(255,176,32,0.3); }
+  .summary .card.ok .num{ color:var(--green); text-shadow:0 0 14px rgba(46,232,126,0.3); }
+  .summary .card.uzun .num{ color:var(--info); text-shadow:0 0 14px rgba(79,195,247,0.3); }
+
+  form{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:16px; margin-bottom:28px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:end;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:11px; color:var(--dim); letter-spacing:0.3px; }
+  .field input{
+    background:#0d1310; border:1px solid var(--line); border-radius:4px;
+    color:var(--text); padding:9px 10px; font-family:var(--mono); font-size:13px;
+    outline:none;
+  }
+  .field input:focus{ border-color:var(--green); }
+  .field select{
+    background:#0d1310; border:1px solid var(--line); border-radius:4px;
+    color:var(--text); padding:9px 10px; font-family:var(--mono); font-size:13px; outline:none;
+  }
+  .field textarea {
+    background:#0d1310;
+    border:1px solid var(--line);
+    border-radius:4px;
+    color:var(--text);
+    padding:9px 10px;
+    font-family:var(--mono);
+    font-size:13px;
+    outline:none;
+    resize:vertical;
+    min-width:200px;
+  }
+
+  .field textarea:focus {
+    border-color:var(--green);
+  }
+
+  body.light .field textarea {
+    background:#f4f6f4;
+  }
+
+
+  body.light .field select, body.light .field input, body.light .edit-row input{ background:#f4f6f4; }
+  #baslik{ flex:1; min-width:200px; }
+  #sure{ width:90px; }
+  #oncelik{ width:110px; }
+  #kategori{ width:130px; }
+  button{
+    font-family:var(--mono); font-size:13px; cursor:pointer;
+    border-radius:4px; border:1px solid var(--line); background:#0d1310; color:var(--text);
+    padding:9px 14px; transition:border-color .15s, color .15s;
+  }
+  body.light button{ background:#f4f6f4; }
+  button:hover{ border-color:var(--green); color:var(--green); }
+  button.primary{ background:var(--green); color:#06110a; border-color:var(--green); font-weight:700; box-shadow:0 0 16px rgba(46,232,126,0.35); }
+  button.primary:hover{ opacity:0.92; color:#06110a; }
+
+  .list{ display:flex; flex-direction:column; gap:10px; }
+  .task{
+    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--dim);
+    border-radius:6px; padding:14px 16px;
+  }
+  .task.overdue{ border-left-color:var(--red); box-shadow:-1px 0 12px -4px rgba(255,77,77,0.25); }
+  .task.soon{ border-left-color:var(--amber); box-shadow:-1px 0 12px -4px rgba(255,176,32,0.2); }
+  .task.ok{ border-left-color:var(--green); }
+  .task.uzun{ border-left-color:var(--info); }
+
+  .task-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .task-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .task-title{ font-size:14px; }
+  .task-status{ font-size:12px; letter-spacing:0.3px; }
+  .task-note {
+    margin-top:10px;
+    padding:8px;
+    border-left:2px solid var(--line);
+    color:var(--dim);
+    font-size:12px;
+    line-height:1.5;
+    white-space:pre-wrap;
+  }
+  .task.overdue .task-status{ color:var(--red); }
+  .task.soon .task-status{ color:var(--amber); }
+  .task.ok .task-status{ color:var(--green); }
+  .task.uzun .task-status{ color:var(--info); }
+
+  .badge{
+    font-size:10px; padding:2px 7px; border-radius:10px; letter-spacing:0.3px;
+    border:1px solid var(--line); color:var(--dim);
+  }
+  .badge.prio-yuksek{ color:var(--red); border-color:var(--red); }
+  .badge.prio-orta{ color:var(--amber); border-color:var(--amber); }
+  .badge.prio-dusuk{ color:var(--dim); }
+  .badge.kategori{ color:var(--text); background:var(--line); border-color:transparent; }
+
+  .bar-track{
+    height:6px; background:#0d1310; border-radius:3px; margin-top:10px; overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .bar-fill{ height:100%; border-radius:3px; transition:width .3s ease; }
+  .task.overdue .bar-fill{ background:linear-gradient(90deg, #ff4d4d, #ff7a5c); }
+  .task.soon .bar-fill{ background:linear-gradient(90deg, #ffb020, #ffd166); }
+  .task.ok .bar-fill{ background:linear-gradient(90deg, #17c46f, #2ee87e); }
+  .task.uzun .bar-fill{ background:linear-gradient(90deg, #0284c7, #4fc3f7); }
+
+  .task-actions{ margin-top:10px; display:flex; gap:8px; }
+  .task-actions button{ padding:5px 10px; font-size:11px; }
+
+  .edit-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .edit-row .field{ flex:1; min-width:140px; }
+  .edit-row input{
+    width:100%; background:#0d1310; border:1px solid var(--line); border-radius:4px;
+    color:var(--text); padding:8px 9px; font-family:var(--mono); font-size:13px; outline:none;
+  }
+  .edit-row input:focus{ border-color:var(--green); }
+  .edit-actions{ display:flex; gap:8px; margin-top:10px; }
+
+  .filebar{
+    display:flex; align-items:center; gap:10px; margin-bottom:20px;
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:10px 14px; font-size:12px; flex-wrap:wrap;
+  }
+  .filebar .dot{ width:8px; height:8px; border-radius:50%; background:var(--dim); flex-shrink:0; }
+  .filebar.connected .dot{ background:var(--green); }
+  .filebar .status{ color:var(--dim); flex:1; min-width:160px; }
+  .filebar.connected .status{ color:var(--green); }
+  .filebar button{ padding:6px 12px; font-size:11.5px; }
+
+  .empty{ color:var(--dim); text-align:center; padding:40px 0; font-size:13px; }
+  .done-section{ margin-top:34px; }
+  .done-section h3{ color:var(--dim); font-size:12px; letter-spacing:0.5px; font-weight:400; border-bottom:1px solid var(--line); padding-bottom:8px; }
+  .done-task{ color:var(--dim); font-size:13px; padding:6px 2px; display:flex; justify-content:space-between; }
+  .done-task button{ padding:3px 8px; font-size:11px; }
+
+  .io{ display:flex; gap:10px; margin-top:28px; border-top:1px solid var(--line); padding-top:18px; }
+  .io p{ color:var(--dim); font-size:11.5px; margin:8px 0 0; line-height:1.5; }
+
+  /* --- Kenar takvim --- */
+  .cal-panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:16px; position:sticky; top:20px;
+  }
+  .cal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cal-header .cal-title{ font-size:12.5px; letter-spacing:0.3px; text-transform:capitalize; }
+  .cal-header button{ padding:4px 9px; font-size:12px; line-height:1; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-dow{ font-size:9.5px; color:var(--dim); text-align:center; padding-bottom:4px; letter-spacing:0.2px; }
+  .cal-day{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:6px; font-size:11px; color:var(--text); border:1px solid transparent; gap:2px;
+  }
+  .cal-day.empty{ 
+    visibility:hidden;
+    padding:0;
+  }
+  .cal-day.today{ border-color:var(--green); font-weight:700; }
+  .cal-day.selected{ background:var(--line); }
+  .cal-day.has-tasks{ cursor:pointer; }
+  .cal-day.has-tasks:hover{ background:var(--line); }
+  .cal-dots{ display:flex; gap:2px; height:5px; }
+  .cal-dot{ width:5px; height:5px; border-radius:50%; }
+  .cal-dot.prio-yuksek{ background:var(--red); }
+  .cal-dot.prio-orta{ background:var(--amber); }
+  .cal-dot.prio-dusuk{ background:var(--dim); }
+
+  .cal-legend{ display:flex; flex-direction:column; gap:5px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); font-size:11px; color:var(--dim); }
+  .cal-legend .row{ display:flex; align-items:center; gap:7px; }
+  .cal-legend .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+  .cal-selected-info{
+    margin-top:12px; padding-top:12px; border-top:1px solid var(--line);
+    font-size:11.5px; color:var(--text); display:none;
+  }
+  .cal-selected-info.show{ display:block; }
+  .cal-selected-info button{ padding:3px 8px; font-size:10.5px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title"><span>●</span> Görev Panosu</div>
+    <div class="right">
+
+      <select id="dilSec">
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+      <button id="bildirimBtn">🔔 Bildirimleri Aç</button>
+      <button id="temaBtn">☀️ Açık Tema</button>
+      <div class="clock" id="saat"></div>
+    </div>
+  </header>
+
+  
+
+  <div class="summary">
+    <div class="card overdue"><div class="num" id="sayOverdue">0</div><div class="label">GECİKMİŞ</div></div>
+    <div class="card soon"><div class="num" id="sayYaklasan">0</div><div class="label">YAKLAŞAN (≤7 gün)</div></div>
+    <div class="card ok"><div class="num" id="sayGuvenli">0</div><div class="label">GÜVENLİ</div></div>
+    <div class="card uzun"><div class="num" id="sayUzun">0</div><div class="label">UZUN VADELİ (&gt;60 gün)</div></div>
+  </div>
+
+  <div class="layout">
+    <main>
+
+      <form id="ekleForm">
+        <div class="field">
+          <label for="baslik">GÖREV BAŞLIĞI</label>
+          <select id="baslik" required>
+            <option value="" disabled selected hidden>Gorev seç...</option>
+            <option value="Windows Güncellemesi">Windows Güncellemesi</option>
+            <option value="Bilgisayar Kurulumu">Bilgisayar Kurulumu</option>
+            <option value="Format Atma">Format Atma</option>
+            <option value="Yazılım Kurulumu">Yazılım Kurulumu</option>
+            <option value="Donanım Kontrolü">Donanım Kontrolü</option>
+            <option value="diger">Diğer...</option>
+          </select>
+
+          <input
+            type="text"
+            id="digerBaslik"
+            placeholder="Görevi yaz..."
+            style="display:none;"
+          >
+        </div>
+        <div class="field">
+          <label for="sonTarihGirisi">SON TARİH</label>
+          <input type="date" id="sonTarihGirisi" required>
+        </div>
+        <div class="field">
+          <label for="oncelik">ÖNCELİK</label>
+          <select id="oncelik">
+            <option value="dusuk">Düşük</option>
+            <option value="orta" selected>Orta</option>
+            <option value="yuksek">Yüksek</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="atananKisi">KİŞİYE ATA</label>
+          
+          <select id="atananKisi">
+            <option value="" disabled selected hidden>Kişi seç...</option>
+          </select>
+
+          <input
+            type="text"
+            id="yeniKisi"
+            placeholder="Yeni kişinin adı..."
+            style="display:none;"
+            >
+        </div>
+        <div class="field">
+          <label for="kategori">KATEGORİ</label>
+          
+          <select id="kategori">
+            <option value = "" disabled selected hidden>Kategori seç...</option>
+            <option value ="Donanım">Donanım</option>
+            <option value="Yazılım">Yazılım</option>
+            <option value="Windows">Windows</option>
+            <option value="Destek">Destek</option>
+            <option value="Kurulum">Kurulum</option>
+            <option value="diger">Diğer...</option>
+          </select>
+
+          <input
+            type="text"
+            id="digerKategori"
+            placeholder="Kategoriyi yaz..."
+            style="display:none;"
+          >
+        </div>
+
+        <div class="field">
+          <label for="notlar">NOT</label>
+
+          <textarea
+            id="notlar"
+            placeholder="Görevle ilgili not..."
+            rows="2"
+          ></textarea>
+        </div>
+
+
+
+        <button type="submit" class="primary">+ Ekle</button>
+      </form>
+
+      <div class="search-row">
+        <input type="text" id="arama" placeholder="🔍 Görev veya kategoriye göre ara...">
+      </div>
+
+      <div class="filter-row">
+        <button type="button" class="filter-btn active" data-filter="tumu">Tümü</button>
+        <button type="button" class="filter-btn" data-filter="overdue">Gecikmiş</button>
+        <button type="button" class="filter-btn" data-filter="soon">Yaklaşan</button>
+        <button type="button" class="filter-btn" data-filter="ok">Güvenli</button>
+        <button type="button" class="filter-btn" data-filter="uzun">Uzun Vadeli</button>
+        <button type="button" class="filter-btn" data-filter="tamamlanan">Tamamlanan</button>
+      </div>
+      
+      <div class="list" id="liste"></div>
+
+      <button type="button" id="tamamlananAcBtn">
+        ✓ Tamamlananları Göster
+      </button>
+
+      <div class="done-section" id="doneSection" style="display:none">
+        <h3>TAMAMLANANLAR</h3>
+        <div id="doneListe"></div>
+      </div>
+
+      <div class="io">
+        <button id="disaAktar">↓ Dışa Aktar (.json)</button>
+        <button id="iceAktarBtn">↑ İçe Aktar</button>
+        <input type="file" id="iceAktarInput" accept="application/json" style="display:none">
+      </div>
+      
+    </main>
+
+    <aside class="cal-panel">
+      <div class="cal-header">
+        <button id="calPrev">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button id="calNext">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <div class="row"><span class="dot" style="background:var(--red)"></span> Yüksek öncelik</div>
+        <div class="row"><span class="dot" style="background:var(--amber)"></span> Orta öncelik</div>
+        <div class="row"><span class="dot" style="background:var(--dim)"></span> Düşük öncelik</div>
+      </div>
+      <div class="cal-selected-info" id="calSeciliBilgi"></div>
+    </aside>
+  </div>
+
+</div>
+
+<script>
+  const VARSAYILAN_SURE = 60;
+  let gorevler = []; // { id, baslik, sonTarih (ISO), sure, tamamlandi, oncelik, kategori }
+  let kisiler = [];
+  let duzenlenenId = null;   // su an duzenleme modunda olan gorevin id'si
+  let aramaTerimi = '';
+  const bildirimSesi=new Audio('sounds/notification.mp3');
+  bildirimSesi.volume=0.5;
+
+  const TEST_MODU=false;
+
+  const BILDIRIM_SAATI=9;
+  const BILDIRIM_DAKIKASI=0;
+
+  const HATIRLATMA_GUNLERI=TEST_MODU
+  ?[7,5,3,2,1,0]
+  :[7,3,1,0];
+  function bildirimSesiCal(){
+    bildirimSesi.currentTime=0;
+
+    bildirimSesi.play().catch(err=> {
+      console.log('Ses çalınmadı:',err);
+    });
+  }
+  let aktifFiltre='tumu';
+  let aktifDil=localStorage.getItem('dil') || 'tr';
+  const $ = (sel) => document.querySelector(sel);
+
+
+  const METINLER={
+    tr: {
+      baslik: 'Görev Panosu',
+      gorevBasligi: 'GÖREV BAŞLIĞI',
+      baslikPlaceholder: 'ör. Rapor teslim et',
+      sonTarih: 'SON TARİH',
+      oncelik: 'ÖNCELİK',
+      kategori: 'KATEGORİ',
+      kategoriPlaceholder: 'ör. İş (opsiyonel)',
+      ekle: '+ Ekle',
+      ara: '🔍 Görev veya kategoriye göre ara...',
+      tumu: 'Tümü',
+      gecikmis: 'Gecikmiş',
+      yaklasan: 'Yaklaşan',
+      guvenli: 'Güvenli',
+      uzunVadeli: 'Uzun Vadeli',
+      tamamlanan: 'Tamamlanan',
+      tamamlananlar: 'TAMAMLANANLAR',
+      disaAktar: '↓ Dışa Aktar (.json)',
+      kartGecikmis: 'GECİKMİŞ',
+      kartYaklasan: 'YAKLAŞAN (≤7 gün)',
+      kartGuvenli: 'GÜVENLİ',
+      kartUzun: 'UZUN VADELİ (>60 gün)',
+      dosyaYok: 'Hiçbir dosyaya bağlı değil — değişiklikler kalıcı değil',
+      dosyayaBaglan: '📁 Dosyaya Bağlan / Oluştur',
+      dusuk: 'Düşük',
+      orta: 'Orta',
+      yuksek: 'Yüksek',
+
+      bosListe: 'Henüz görev yok. Yukarıdan bir tane ekle.',
+      iceAktar: '↑ İçe Aktar'
+    },
+
+    en: {
+      baslik: 'Task Dashboard',
+      gorevBasligi: 'TASK TITLE',
+      baslikPlaceholder:'e.g. Submit report',
+      sonTarih:'DUE DATE',
+      oncelik: 'PRIORITY',
+      kategori: 'CATEGORY',
+      kategoriPlaceholder: 'e.g. Work(optional)',
+      ekle: '+ Add',
+      ara: '🔍 Search by task or category...',
+      tumu: 'All',
+      gecikmis: 'Overdue',
+      yaklasan: 'Upcoming',
+      guvenli: 'Safe',
+      uzunVadeli: 'Long Term',
+      tamamlanan:'Completed',
+      tamamlananlar:'COMPLETED',
+      disaAktar: '↓ Export (.json)',
+      kartGecikmis: 'OVERDUE',
+      kartYaklasan: 'UPCOMING (≤7 days)',
+      kartGuvenli: 'SAFE',
+      kartUzun: 'LONG TERM (>60 days)',
+
+      dosyaYok: 'No file connected — changes are not persistent',
+      dosyayaBaglan: '📁 Connect / Create File',
+
+      dusuk: 'Low',
+      orta: 'Medium',
+      yuksek: 'High',
+
+      bosListe: 'No tasks yet. Add one above.',
+      iceAktar: '↑ Import'
+
+    }
+  };
+  function diliUygula(){
+  const t = METINLER[aktifDil];
+
+  document.documentElement.lang = aktifDil;
+  document.title = t.baslik;
+
+  document.querySelector('header .title').innerHTML =
+    `<span>●</span> ${t.baslik}`;
+
+  document.querySelector('label[for="baslik"]').textContent = t.gorevBasligi;
+  $('#baslik').placeholder = t.baslikPlaceholder;
+
+  document.querySelector('label[for="sonTarihGirisi"]').textContent = t.sonTarih;
+  document.querySelector('label[for="oncelik"]').textContent = t.oncelik;
+  document.querySelector('label[for="kategori"]').textContent = t.kategori;
+
+  $('#kategori').placeholder = t.kategoriPlaceholder;
+
+  document.querySelector('#ekleForm button[type="submit"]').textContent = t.ekle;
+  $('#arama').placeholder = t.ara;
+
+  document.querySelector('[data-filter="tumu"]').textContent = t.tumu;
+  document.querySelector('[data-filter="overdue"]').textContent = t.gecikmis;
+  document.querySelector('[data-filter="soon"]').textContent = t.yaklasan;
+  document.querySelector('[data-filter="ok"]').textContent = t.guvenli;
+  document.querySelector('[data-filter="uzun"]').textContent = t.uzunVadeli;
+  document.querySelector('[data-filter="tamamlanan"]').textContent = t.tamamlanan;
+
+  document.querySelector('#doneSection h3').textContent = t.tamamlananlar;
+
+  $('#disaAktar').textContent = t.disaAktar;
+  $('#iceAktarBtn').textContent = t.iceAktar;
+  $('#sayOverdue').parentElement.querySelector('.label').textContent = t.kartGecikmis;
+  $('#sayYaklasan').parentElement.querySelector('.label').textContent = t.kartYaklasan;
+  $('#sayGuvenli').parentElement.querySelector('.label').textContent = t.kartGuvenli;
+  $('#sayUzun').parentElement.querySelector('.label').textContent = t.kartUzun;
+
+  
+
+  document.querySelector('#oncelik option[value="dusuk"]').textContent = t.dusuk;
+  document.querySelector('#oncelik option[value="orta"]').textContent = t.orta;
+  document.querySelector('#oncelik option[value="yuksek"]').textContent = t.yuksek;
+}
+$('#dilSec').value = aktifDil;
+
+$('#dilSec').addEventListener('change', (e) => {
+  aktifDil = e.target.value;
+
+  localStorage.setItem('dil', aktifDil);
+
+  diliUygula();
+});
+
+diliUygula();
+
+  const liste = $('#liste');
+  const doneListe = $('#doneListe');
+  const doneSection = $('#doneSection');
+
+  const tamamlananAcBtn = $('#tamamlananAcBtn');
+  let tamamlananlarAcik = false;
+
+  function bugun(){
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function kalanGun(sonTarihISO){
+    const hedef = new Date(sonTarihISO);
+    hedef.setHours(0,0,0,0);
+    const fark = hedef - bugun();
+    return Math.round(fark / 86400000);
+  }
+
+  // Tarih input'unun (<input type="date">) bekledigi yyyy-mm-dd formatina cevirir
+  function isoTarihStr(tarihISO){
+    const d = new Date(tarihISO);
+    const yil = d.getFullYear();
+    const ay = String(d.getMonth() + 1).padStart(2, '0');
+    const gun = String(d.getDate()).padStart(2, '0');
+    return `${yil}-${ay}-${gun}`;
+  }
+
+  // yyyy-mm-dd formatindaki bir tarih metnini gun basi ISO tarihine cevirir
+  function tarihGirisindenISO(yyyyMmDd){
+    const [y, m, d] = yyyyMmDd.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setHours(0,0,0,0);
+    return dt.toISOString();
+  }
+
+  function durum(kalan){
+    if (kalan < 0) return { sinif:'overdue', metin:`Son tarih geçti (${Math.abs(kalan)} gün gecikme)` };
+    if (kalan === 0) return { sinif:'soon', metin:'Son teslim tarihi bugün' };
+    if (kalan <= 7) return { sinif:'soon', metin:`Son tarihe ${kalan} gün kaldı` };
+    if (kalan <= 60) return { sinif:'ok', metin:`Son tarihe ${kalan} gün kaldı` };
+    return { sinif:'uzun', metin:'Son tarihe 60 günden fazla süre bulunmaktadır' };
+  }
+
+  const ONCELIK_ETIKET = { dusuk:'Düşük', orta:'Orta', yuksek:'Yüksek' };
+
+  function ciz(){
+    const saat = $('#saat');
+    saat.textContent = new Date().toLocaleDateString('tr-TR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    const terim = aramaTerimi.trim().toLowerCase();
+
+let aktifler = gorevler
+  .filter(g => !g.tamamlandi)
+  .filter(g =>
+    !terim ||
+    g.baslik.toLowerCase().includes(terim) ||
+    (g.kategori || '').toLowerCase().includes(terim)
+  );
+
+  if (seciliGunISO) {
+    aktifler = aktifler.filter(g =>
+      isoTarihStr(g.sonTarih) === seciliGunISO
+    );
+  }
+
+if (aktifFiltre !== 'tumu' && aktifFiltre !== 'tamamlanan'){
+  aktifler = aktifler.filter(g => {
+    const kalan = kalanGun(g.sonTarih);
+    return durum(kalan).sinif === aktifFiltre;
+  });
+}
+
+if (aktifFiltre === 'tamamlanan'){
+  aktifler = [];
+}
+
+aktifler.sort((a,b) => {
+  if (a.sabitli && !b.sabitli) return -1;
+  if (!a.sabitli && b.sabitli) return 1;
+
+  return kalanGun(a.sonTarih) - kalanGun(b.sonTarih);
+});
+
+    let overdue = 0, soon = 0, ok = 0, uzun = 0;
+
+    liste.innerHTML = '';
+    if (aktifler.length === 0){
+      liste.innerHTML = `<div class="empty">${METINLER[aktifDil].bosListe}</div>`;    }
+
+    aktifler.forEach(g => {
+      const kalan = kalanGun(g.sonTarih);
+      const d = durum(kalan);
+      if (d.sinif === 'overdue') overdue++;
+      else if (d.sinif === 'soon') soon++;
+      else if (d.sinif === 'uzun') uzun++;
+      else ok++;
+
+      const sure = g.sure || VARSAYILAN_SURE;
+      let gecen = sure - kalan;
+      gecen = Math.max(0, Math.min(sure, gecen));
+      const yuzde = Math.round((gecen / sure) * 100);
+
+      const el = document.createElement('div');
+      el.className = `task ${d.sinif}`;
+
+      if (duzenlenenId === g.id){
+        const oncelik = g.oncelik || 'orta';
+        el.innerHTML = `
+          <div class="edit-row">
+            <div class="field">
+              <label style="font-size:11px;color:var(--dim)">BAŞLIK</label>
+              <input type="text" id="editBaslik" value="${escapeHtml(g.baslik)}">
+            </div>
+            <div class="field" style="max-width:150px">
+              <label style="font-size:11px;color:var(--dim)">SON TARİH</label>
+              <input type="date" id="editSonTarih" value="${isoTarihStr(g.sonTarih)}">
+            </div>
+            <div class="field" style="max-width:110px">
+              <label style="font-size:11px;color:var(--dim)">ÖNCELİK</label>
+              <select id="editOncelik">
+                <option value="dusuk" ${oncelik==='dusuk'?'selected':''}>Düşük</option>
+                <option value="orta" ${oncelik==='orta'?'selected':''}>Orta</option>
+                <option value="yuksek" ${oncelik==='yuksek'?'selected':''}>Yüksek</option>
+              </select>
+            </div>
+            <div class="field" style="max-width:130px">
+              <label style="font-size:11px;color:var(--dim)">KATEGORİ</label>
+              <input type="text" id="editKategori" value="${escapeHtml(g.kategori||'')}">
+            </div>
+            <div class="field" style="max-width:130px">
+              <label style="font-size:11px;color:var(--dim)">KİŞİYE ATA</label>
+              <input
+                type="text"
+                id="editAtananKisi"
+                value="${escapeHtml(g.atananKisi||'')}">
+            </div>
+            <div class="field" style="flex-basis:100%">
+              <label style="font-size:11px;color:var(--dim)">NOT</label>
+
+              <textarea
+                id="editNotlar"
+                rows="3"
+              >${escapeHtml(g.notlar||'')}</textarea>
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button data-action="save" data-id="${g.id}">✓ Kaydet</button>
+            <button data-action="cancel">✕ Vazgeç</button>
+          </div>
+        `;
+      } else {
+        const oncelik = g.oncelik || 'orta';
+        const rozetler = `
+          <span class="badge prio-${oncelik}">${ONCELIK_ETIKET[oncelik]}</span>
+          ${g.atananKisi ? ` <span class="badge">👤${escapeHtml(g.atananKisi)}</span>` : ''}
+          ${g.kategori ? `<span class="badge kategori">${escapeHtml(g.kategori)}</span>` : ''}
+        `;
+        el.innerHTML = `
+          <div class="task-top">
+            <div class="task-title-row">
+              <div class="task-title">${escapeHtml(g.baslik)}</div>
+              ${rozetler}
+            </div>
+            <div class="task-status">${d.metin}</div>
+          </div>
+        ${g.notlar ? `
+          <div class="task-note">
+            📝 ${escapeHtml(g.notlar)}
+          </div>
+        `: ''}
+          <div class="bar-track"><div class="bar-fill" style="width:${yuzde}%"></div></div>
+          <div class="task-actions">
+            <button data-action="pin" data-id="${g.id}">
+            ${g.sabitli ? '📌 Sabitlendi' : '📍 Sabitle'}
+            </button>
+            <button data-action="edit" data-id="${g.id}">✎ Düzenle</button>
+            <button data-action="done" data-id="${g.id}">✓ Tamamla</button>
+            <button data-action="del" data-id="${g.id}">✕ Sil</button>
+          </div>
+        `;
+      }
+      liste.appendChild(el);
+    });
+
+    $('#sayOverdue').textContent = overdue;
+    $('#sayYaklasan').textContent = soon;
+    $('#sayGuvenli').textContent = ok;
+    $('#sayUzun').textContent = uzun;
+
+    const tamamlananlar = gorevler.filter(g => g.tamamlandi);
+    doneSection.style.display = tamamlananlar.length && tamamlananlarAcik ? 'block' : 'none';
+    tamamlananAcBtn.style.display= tamamlananlar.length ? 'inline-block' : 'none';
+    doneListe.innerHTML = '';
+    tamamlananlar.forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'done-task';
+      el.innerHTML = `<span>✓ ${escapeHtml(g.baslik)}</span><button data-action="del" data-id="${g.id}">✕ Sil</button>`;
+      doneListe.appendChild(el);
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  $('#atananKisi').addEventListener('change', () => {
+    if ($('#atananKisi').value=== 'yeni') {
+        $('#yeniKisi').style.display = 'block';
+        $('#yeniKisi').focus();
+    } else {
+        $('#yeniKisi').style.display = 'none';
+        $('#yeniKisi').value = '';
+    }
+  });
+
+  async function kisileriYukle() {
+    const cevap = await fetch('/api/kisiler');
+
+    kisiler = await cevap.json();
+
+    const select = $('#atananKisi');
+
+    select.innerHTML = '';
+
+    const kisiPlaceholder = new Option('Kişi seç...','');
+
+    kisiPlaceholder.disabled = true;
+    kisiPlaceholder.selected = true;
+    kisiPlaceholder.hidden = true;
+
+    select.add(kisiPlaceholder);
+
+    kisiler.forEach(kisi=> {
+      select.add(
+        new Option(kisi.ad, kisi.ad)
+      );
+    });
+    
+
+    select.add(
+      new Option('+ Yeni kişi ekle...', 'yeni')
+    );
+  }
+
+
+  
+
+  async function gorevleriYukle () {
+    const cevap = await fetch ('/api/gorevler');
+    gorevler = await cevap.json();
+
+    ciz();
+    cizTakvim();
+  }
+
+  $('#baslik').addEventListener('change',()=> {
+
+    if($('#baslik').value==='diger') {
+      $('#digerBaslik').style.display='block';
+      $('#kategori').addEventListener('change', () => {
+
+        if ($('#kategori').value==='diger') {
+          $('#digerKategori').style.display = 'block';
+          $('#digerKategori').focus();
+        } else {
+          $('#digerKategori').style.display = 'none';
+          $('#digerKategori').value='';
+        }
+      });
+      $('#digerBaslik').focus();
+    } else {
+      $('#digerBaslik').style.display='none';
+      $('#digerBaslik').value='';
+    }
+  }); 
+
+  $('#ekleForm').addEventListener('submit',async (e)=> {
+    e.preventDefault();
+
+    let baslik =$('#baslik').value;
+
+    if(baslik==='diger') {
+      baslik = $('#digerBaslik').value.trim();
+    }
+
+    if(!baslik) return;
+
+    const tarihStr = $('#sonTarihGirisi').value;
+    if(!tarihStr) return;
+
+    const sonISO = tarihGirisindenISO(tarihStr);
+    const sure = Math.max(kalanGun(sonISO), 1);
+
+    let kategori = $('#kategori').value;
+
+    if (kategori==='diger') {
+      kategori = $('#digerKategori').value.trim();
+
+      if(!kategori) {
+        alert('Yeni kategoriyi yaz.');
+        return;
+      }
+    }
+
+
+    let atananKisi = $('#atananKisi').value;
+
+    if(atananKisi=== 'yeni') {
+      const yeniKisiAdi = $('#yeniKisi').value.trim();
+
+      if(!yeniKisiAdi) {
+        alert('Yeni kişinin adını yaz.');
+        return;
+      }
+
+      const kisiCevap = await fetch('/api/kisiler', {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+          ad: yeniKisiAdi
+        })
+      });
+
+      const kisi = await kisiCevap.json();
+
+      atananKisi = kisi.ad;
+
+      await kisileriYukle();
+    }
+    
+    const yeniGorev = {
+      baslik: baslik,
+      sonTarih: sonISO,
+      sure: sure,
+      oncelik: $('#oncelik').value,
+      kategori: kategori,
+      atananKisi: atananKisi,
+      notlar: $('#notlar').value.trim()
+    };
+
+    await fetch('/api/gorevler', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(yeniGorev)
+    });
+
+    $('#baslik').value = '';
+    $('#sonTarihGirisi').value='';
+    $('#kategori').value='';
+    $('#digerKategori').style.display= 'none';
+    $('#oncelik').value='orta';
+
+    if($('#atananKisi')) {
+      $('#atananKisi').value='';
+    }
+
+    $('#digerBaslik').value='';
+    $('#digerBaslik').style.display ='none';
+
+    await gorevleriYukle();
+  });
+
+  document.addEventListener('click',async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+
+    if(btn.dataset.action==='pin'){
+      
+      const cevap = await fetch (`/api/gorevler/${id}/sabitle`, {
+        method: 'PATCH'
+      });
+
+      if(!cevap.ok) {
+        alert('Görev sabitlenemedi.');
+        return;
+      }
+
+      await gorevleriYukle();
+      return;
+
+    }
+    
+    else if (btn.dataset.action === 'done'){
+      
+      const cevap = await fetch(`/api/gorevler/${id}/tamamla`, {
+        method: 'PATCH'
+      });
+      if(!cevap.ok) {
+        alert ('Görev tamamlanmadı.');
+        return;
+      }
+
+      await gorevleriYukle();
+      return;
+
+    } else if (btn.dataset.action === 'del'){
+      
+        const cevap= await fetch(`/api/gorevler/${id}`,{
+          method: 'DELETE'
+        });
+
+        if(!cevap.ok) {
+          alert('Görev silinemedi.');
+          return;
+        }
+        
+        await gorevleriYukle();
+        return;
+    } else if (btn.dataset.action === 'edit'){
+      duzenlenenId = id;
+    } else if (btn.dataset.action === 'cancel'){
+      duzenlenenId = null;
+    } else if (btn.dataset.action === 'save'){
+      const yeniBaslik= 
+        document.getElementById('editBaslik').value.trim();
+
+      const yeniTarihStr =
+        document.getElementById('editSonTarih').value;
+
+      const yeniOncelik =
+        document.getElementById('editOncelik').value;
+
+      const yeniKategori =
+        document.getElementById('editKategori').value.trim();
+      
+      const yeniAtananKisi =
+        document.getElementById('editAtananKisi').value.trim();
+
+      const yeniNotlar =
+        document.getElementById('editNotlar').value.trim();
+
+      if(!yeniBaslik||!yeniTarihStr) {
+        return;
+      }
+
+      const sonISO = tarihGirisindenISO(yeniTarihStr);
+      const sure = Math.max(kalanGun(sonISO), 1);
+
+      const cevap = await fetch(`/api/gorevler/${id}`, {
+        method: 'PATCH',
+
+        headers: {
+          'Content-Type' : 'application/json'
+        },
+
+        body: JSON.stringify({
+          baslik:yeniBaslik,
+          sonTarih: sonISO,
+          sure: sure,
+          oncelik: yeniOncelik,
+          kategori: yeniKategori,
+          atananKisi: yeniAtananKisi,
+          notlar: yeniNotlar
+        })
+      });
+
+      if(!cevap.ok) {
+        alert('Görev güncellenemedi.');
+        return;
+      }
+
+      duzenlenenId=null;
+
+      await gorevleriYukle();
+      return;
+    }
+    ciz();
+    cizTakvim();
+  });
+
+
+  $('#disaAktar').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(gorevler, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gorevler.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  $('#iceAktarBtn').addEventListener('click', () => $('#iceAktarInput').click());
+  $('#iceAktarInput').addEventListener('change',(e)=> {
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async() => {
+      try {
+        const veri = JSON.parse(reader.result);
+
+        if(!Array.isArray(veri)) {
+          alert('Geçerli bir görev yedeği seç.');
+          return;
+        }
+
+        const cevap = await fetch('/api/gorevler/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(veri)
+        });
+
+        if(!cevap.ok) {
+          alert('Görevler içe aktarılmadı.');
+          return;
+        }
+
+        await gorevleriYukle();
+
+        alert('Görevler başarıyla içe aktarıldı.');
+      } catch(err) {
+        alert('Dosya okunmadı, geçerli bir .json dosyası seç');
+      }
+    };
+
+    reader.readAsText(file);
+    e.target.value = '';
+  })
+  
+  tamamlananAcBtn.addEventListener('click', () => {
+  tamamlananlarAcik = !tamamlananlarAcik;
+
+  tamamlananAcBtn.textContent = tamamlananlarAcik
+    ? '✕ Tamamlananları Gizle'
+    : '✓ Tamamlananları Göster';
+
+  ciz();
+});
+  
+  kisileriYukle();
+  gorevleriYukle();
+  
+
+  // --- Kenar takvim ---
+  let calYear = bugun().getFullYear();
+  let calMonth = bugun().getMonth(); // 0-11
+  let seciliGunISO = null; // tiklanip filtrelenen gun (yyyy-mm-dd)
+
+  const AY_ADLARI = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const GUN_KISALTMA = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
+  const PRIO_SIRA = { yuksek:0, orta:1, dusuk:2 };
+
+  function ayniGunMu(a, b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+
+  function cizTakvim(){
+    $('#calTitle').textContent = `${AY_ADLARI[calMonth]} ${calYear}`;
+    const grid = $('#calGrid');
+    grid.innerHTML = '';
+
+    GUN_KISALTMA.forEach(k => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = k;
+      grid.appendChild(el);
+    });
+
+    const ayinIlkGunu = new Date(calYear, calMonth, 1);
+    const ayinGunSayisi = new Date(calYear, calMonth + 1, 0).getDate();
+    // Pazartesi = 0 olacak sekilde bosluk hesabi (JS'te Pazar=0, Cumartesi=6)
+    const bosluk = (ayinIlkGunu.getDay() + 6) % 7;
+
+    for (let i = 0; i < bosluk; i++){
+      const bos = document.createElement('div');
+      bos.className = 'cal-day empty';
+      grid.appendChild(bos);
+    }
+
+    const bugunTarihi = bugun();
+    const aktifGorevler = gorevler.filter(g => !g.tamamlandi);
+
+    for (let gun = 1; gun <= ayinGunSayisi; gun++){
+      const buGun = new Date(calYear, calMonth, gun);
+      const buGunGorevleri = aktifGorevler.filter(g => ayniGunMu(new Date(g.sonTarih), buGun));
+
+      const hucre = document.createElement('div');
+      hucre.className = 'cal-day';
+      if (ayniGunMu(buGun, bugunTarihi)) hucre.classList.add('today');
+
+      const buGunISO = isoTarihStr(buGun.toISOString());
+      if (seciliGunISO === buGunISO) hucre.classList.add('selected');
+
+      const gunNumEl = document.createElement('div');
+      gunNumEl.textContent = gun;
+      hucre.appendChild(gunNumEl);
+
+      if (buGunGorevleri.length){
+        hucre.classList.add('has-tasks');
+        const dotsEl = document.createElement('div');
+        dotsEl.className = 'cal-dots';
+        const oncelikler = [...new Set(buGunGorevleri.map(g => g.oncelik || 'orta'))]
+          .sort((a,b) => PRIO_SIRA[a] - PRIO_SIRA[b])
+          .slice(0, 3);
+        oncelikler.forEach(o => {
+          const dot = document.createElement('span');
+          dot.className = `cal-dot prio-${o}`;
+          dotsEl.appendChild(dot);
+        });
+        hucre.appendChild(dotsEl);
+      }
+
+        hucre.addEventListener('click', () => {
+          seciliGunISO = (seciliGunISO === buGunISO) 
+            ? null 
+            : buGunISO;
+
+          ciz();
+          cizTakvim();
+          gunFiltresiniGoster(buGunGorevleri, buGun);
+        });
+      
+
+      grid.appendChild(hucre);
+    }
+
+    if (!seciliGunISO){
+      $('#calSeciliBilgi').classList.remove('show');
+    }
+  }
+
+  function gunFiltresiniGoster(gorevListesi, tarih){
+    const kutu = $('#calSeciliBilgi');
+    if (!seciliGunISO){
+      kutu.classList.remove('show');
+      return;
+    }
+    const tarihMetni = tarih.toLocaleDateString('tr-TR', { day:'numeric', month:'long' });
+    const basliklar = gorevListesi.map(g => `• ${escapeHtml(g.baslik)}`).join('<br>');
+    kutu.innerHTML = `<strong>${tarihMetni}</strong><br>${basliklar}<br><button id="calTemizle">✕ Filtreyi Temizle</button>`;
+    kutu.classList.add('show');
+    document.getElementById('calTemizle').addEventListener('click', () => {
+      seciliGunISO = null;
+
+      ciz();
+      cizTakvim();
+    });
+  }
+
+  $('#calPrev').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0){ calMonth = 11; calYear--; }
+    cizTakvim();
+  });
+  $('#calNext').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11){ calMonth = 0; calYear++; }
+    cizTakvim();
+  });
+
+  cizTakvim();
+
+  // --- Arama ---
+  $('#arama').addEventListener('input', (e) => {
+    aramaTerimi = e.target.value;
+    ciz();
+  });
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+
+    aktifFiltre = btn.dataset.filter;
+
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('active');
+    });
+
+    btn.classList.add('active');
+
+    ciz();
+  });
+});
+
+  // --- Açık / koyu tema ---
+  const temaBtn = $('#temaBtn');
+  temaBtn.addEventListener('click', () => {
+    const acik = document.body.classList.toggle('light');
+    temaBtn.textContent = acik ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+  });
+
+  // --- Tarayıcı bildirimleri ---
+  const bildirimBtn = $('#bildirimBtn');
+
+  function bildirimDurumunuGoster(){
+    if (!('Notification' in window)){
+      bildirimBtn.textContent = '🔕 Bildirim desteklenmiyor';
+      bildirimBtn.disabled = true;
+    } else if (Notification.permission === 'granted'){
+      bildirimBtn.textContent = '🔔 Bildirimler açık';
+    } else if (Notification.permission === 'denied'){
+      bildirimBtn.textContent = '🔕 Bildirimler engellendi';
+    } else {
+      bildirimBtn.textContent = '🔔 Bildirimleri Aç';
+    }
+  }
+  bildirimDurumunuGoster();
+
+  bildirimBtn.addEventListener('click', async () => {
+    bildirimSesiCal();
+
+
+   
+
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default'){
+      await Notification.requestPermission();
+      bildirimDurumunuGoster();
+      bildirimleriKontrolEt();
+    } else if (Notification.permission === 'granted'){
+      bildirimleriKontrolEt(true);
+    }
+  });
+
+  function bildirimleriKontrolEt(elleTetiklendi){
+
+    const simdi=new Date();
+
+    if (
+      !elleTetiklendi && (simdi.getHours() !== BILDIRIM_SAATI || simdi.getMinutes() !== BILDIRIM_DAKIKASI)
+    ) return;
+
+if (!('Notification' in window)) return;
+if (Notification.permission !== 'granted') return;
+
+const aktifGorevler = gorevler.filter(g => !g.tamamlandi);
+
+let bildirimGonderildi = false;
+
+aktifGorevler.forEach(g => {
+
+  const kalan = kalanGun(g.sonTarih);
+
+  if (!HATIRLATMA_GUNLERI.includes(kalan)) return;
+
+  const bildirimAnahtari =
+  `${TEST_MODU ? 'test' : 'gercek'}_${g.id}_${isoTarihStr(g.sonTarih)}_${kalan}`;
+
+if (localStorage.getItem(bildirimAnahtari)) return;
+
+  let mesaj;
+
+  if (kalan === 0){
+    mesaj = 'Bu görevin son teslim tarihi bugün!';
+  } else {
+    mesaj = `Bu görevin son tarihine ${kalan} gün kaldı.`;
+  }
+
+  new Notification(`⏰ ${g.baslik}`, {
+    body: mesaj
+  });
+
+  localStorage.setItem(bildirimAnahtari, 'gonderildi');
+
+  bildirimGonderildi = true;
+});
+
+if (bildirimGonderildi){
+  bildirimSesiCal();
+}
+
+if (elleTetiklendi && !bildirimGonderildi){
+  new Notification('✅ Hatırlatma yok', {
+    body: 'Bugün için hatırlatılması gereken bir görev bulunmuyor.'
+  });
+}
+}
+
+  // sayfa acilirken bildirim izni zaten verilmisse otomatik kontrol et
+  if ('Notification' in window && Notification.permission === 'granted'){
+    setTimeout(() => bildirimleriKontrolEt(false), 800);
+  }
+    setInterval(()=>{
+      bildirimleriKontrolEt(false);
+    }, 60 * 1000);
+
+</script>
+</body>
+</html>
